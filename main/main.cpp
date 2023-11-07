@@ -15,11 +15,13 @@ void ReadData(std::string path, size_t imgSize, size_t& examples, std::vector<Ex
 int main()
 {
 
-	const ActivateFunction::FunctionType af = ActivateFunction::FunctionType::ReLU;
-	const size_t l = 3;
-	const std::vector<size_t> sizes = { 784, 256, 10 };
+	const ActivateFunction::FunctionType af = ActivateFunction::FunctionType::Sigmoid;
+	const size_t l = 4;
+	const std::vector<size_t> sizes = { 784, 100, 20, 10 };
+	const int maxEpoch = 30;
 	Network NW(l,sizes, af);
 
+	std::cout << "Network config:\n";
 	std::cout << l << " layers\n";
 	std::cout << "Sizes of layers: ";
 	for (size_t i = 0; i < l; ++i)
@@ -31,18 +33,20 @@ int main()
 		std::cout << "Activate function: ReLU\n";
 	else if (af == ActivateFunction::FunctionType::Tanh)
 		std::cout << "Activate function: Tanh\n";
-
+	std::cout << "-------------------------------\n";
 
 
 
 	size_t examples = 0;
 	std::vector<ExampleData> data;
+	std::cout << "Loading train data...\n";
 	ReadData("lib_MNIST_edit.txt", sizes[0], examples, data);
+	std::cout << "-------------------------------\n";
 	auto begin = std::chrono::steady_clock::now();
 
+	std::cout << "Training...\n";
 	int score = 0, bestScore = 0;
 	int epoch = 0; 
-	const int maxEpoch = 10;
 	while (score / examples * 100 < 100) {
 		score = 0;
 		auto t1 = std::chrono::steady_clock::now();
@@ -64,7 +68,7 @@ int main()
 			bestScore = score;
 		std::cout << "score: " << score / static_cast<double>(examples) * 100 << "\t" 
 			      << "bestScore: " << bestScore / static_cast<double>(examples) * 100 << "\t" 
-				  << "epoch: " << epoch << "\tTIME: " << time.count() << std::endl;
+				  << "epoch: " << epoch << "\ttime: " << time.count() << "s\n";
 		++epoch;
 		if (epoch == maxEpoch)
 			break;
@@ -73,13 +77,18 @@ int main()
 	{
 		auto end = std::chrono::steady_clock::now();
 		auto time = std::chrono::duration_cast<std::chrono::seconds>(end - begin);
-		std::cout << "TIME: " << time.count() / 60. << " min" << std::endl;
+		std::cout << "time of training: " << time.count() / 60. << " min" << std::endl;
 	}
+	std::cout << "-------------------------------\n";
+
 
 	{
+
 		size_t tests = 0;
 		std::vector<ExampleData> test_data;
+		std::cout << "Loading test data...\n";
 		ReadData("lib_10k.txt", sizes[0], tests, test_data);
+		std::cout << "-------------------------------\n";
 		int score = 0;
 		for (int i = 0; i < tests; ++i) {
 			NW.input(test_data[i].pixels);
